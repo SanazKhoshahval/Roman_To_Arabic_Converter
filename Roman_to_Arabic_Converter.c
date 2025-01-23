@@ -2,70 +2,72 @@
 #include <stdio.h>
 #include <ctype.h>
 
-int roman_to_arabic(const char roman[]);
+// Define constants for Roman numeral values
+#define VALUE_I 1
+#define VALUE_V 5
+#define VALUE_X 10
+#define VALUE_L 50
+#define VALUE_C 100
+#define VALUE_D 500
+#define VALUE_M 1000
+
+int roman_to_arabic();
 
 int main(void) {
-    char roman[100];
-    int result;
-
-    printf(" 10 Roman numeral values will be input and converted into\ntheir equivalent Hindu-Arabic numeric values.\n\n");
+    printf("10 Roman numeral values will be input and converted into\ntheir equivalent Hindu-Arabic numeric values.\n\n");
 
     for (int i = 1; i <= 10; i++) {
         printf("Input Roman numeral # %d: ", i);
-        scanf("%99s", roman);
-
-        for (int j = 0; roman[j] != '\0'; j++) {
-            roman[j] = toupper(roman[j]);
+        if (roman_to_arabic() == -1) { // If error, flush remaining characters of this line
+            while (getchar() != '\n'); // Clear the buffer if an error occurred
         }
-
-        result = roman_to_arabic(roman);
-        if (result >= 0) {  // Check if the conversion was successful
-            printf("%s = %d \n\n", roman, result);
-        }
+        printf("\n"); // Newline for the next prompt
     }
     printf("THAT'S ALL FOLKS :)\n");
+    return 0;
 }
 
-int roman_to_arabic(char roman[]) {
-    int arabic = 0;
-    int current_value = 0;
-    int i = 0;
+int roman_to_arabic() {
+    int arabic = 0, current_value = 0, last_value = 0;
+    int first_invalid_char = 0; // Flag to store the first invalid character for error message
+    char c = getchar(); // Read the first character
 
-    for (i = 0; roman[i] != '\0'; i++) {
-        char r = roman[i];
-        switch (r) {
-        case 'I': current_value = 1; break;
-        case 'V': current_value = 5; break;
-        case 'X': current_value = 10; break;
-        case 'L': current_value = 50; break;
-        case 'C': current_value = 100; break;
-        case 'D': current_value = 500; break;
-        case 'M': current_value = 1000; break;
+    while (c != '\n') {
+        char upper_c = toupper(c); // Convert to uppercase
+        printf("%c", upper_c); // Echo the character immediately
+
+        switch (upper_c) {
+        case 'I': current_value = VALUE_I; break;
+        case 'V': current_value = VALUE_V; break;
+        case 'X': current_value = VALUE_X; break;
+        case 'L': current_value = VALUE_L; break;
+        case 'C': current_value = VALUE_C; break;
+        case 'D': current_value = VALUE_D; break;
+        case 'M': current_value = VALUE_M; break;
         default:
-            // Print the part of the string up to the first invalid character
-            roman[i + 1] = '\0';  // Terminate string right after the invalid character
-            printf("%s Error - last character was not valid!!!\n\n", roman);
-            return -1;
+            if (!first_invalid_char) first_invalid_char = 1; // Set error flag
         }
 
-        // Calculate the total value assuming the next valid characters
-        if (roman[i + 1] != '\0') {
-            switch (roman[i + 1]) {
-            case 'I': arabic += (current_value < 1) ? -current_value : current_value; break;
-            case 'V': arabic += (current_value < 5) ? -current_value : current_value; break;
-            case 'X': arabic += (current_value < 10) ? -current_value : current_value; break;
-            case 'L': arabic += (current_value < 50) ? -current_value : current_value; break;
-            case 'C': arabic += (current_value < 100) ? -current_value : current_value; break;
-            case 'D': arabic += (current_value < 500) ? -current_value : current_value; break;
-            case 'M': arabic += (current_value < 1000) ? -current_value : current_value; break;
-            default:
-                continue;  // Keep processing if the next character is valid
-            }
+        if (first_invalid_char) {
+            printf(" Error - last character was not valid!!!");
+            return -1; // Signal an error occurred
+        }
+
+        // Calculate the Arabic value
+        if (last_value > 0 && last_value < current_value) {
+            arabic += current_value - 2 * last_value;
         }
         else {
-            arabic += current_value; // Add last valid character to total
-            break;  // Exit loop if no more characters
+            arabic += current_value;
         }
+
+        last_value = current_value;
+        c = getchar(); // Continue reading characters
+    }
+
+    // Only print the total if no invalid characters were found
+    if (!first_invalid_char) {
+        printf(" = %d", arabic);
     }
 
     return arabic;
